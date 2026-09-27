@@ -20,7 +20,7 @@ SUPABASE_JWKS_URL = os.getenv(
 # Groq API key for AI incident classification. Not required at import time so
 # the server can still boot and report a clear error from the endpoint itself.
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
+GROQ_VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "qwen/qwen3.8-27b")
 
 # Comma-separated list of allowed origins for CORS, e.g.
 # "http://localhost:8080,https://civicsafe.vercel.app"
