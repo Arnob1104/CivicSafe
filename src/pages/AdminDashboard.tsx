@@ -4,8 +4,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useNavigate, Link } from "react-router-dom";
-import { Shield, LogOut, AlertTriangle, Clock, CheckCircle, Loader2, Eye, BarChart3, Users } from "lucide-react";
+import { Shield, LogOut, AlertTriangle, Clock, CheckCircle, Loader2, Eye, BarChart3, Users, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
@@ -42,6 +46,8 @@ export default function AdminDashboard() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
+  const [deleteTarget, setDeleteTarget] = useState<Incident | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -68,6 +74,20 @@ export default function AdminDashboard() {
     } catch {
       toast.error("Failed to update status");
     }
+  };
+
+  const deleteIncident = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/api/incidents/${deleteTarget.id}`);
+      toast.success("Report deleted");
+      setIncidents((prev) => prev.filter((i) => i.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch {
+      toast.error("Failed to delete report");
+    }
+    setDeleting(false);
   };
 
   const filtered = filter === "all" ? incidents : incidents.filter((i) => i.status === filter);
@@ -195,6 +215,14 @@ export default function AdminDashboard() {
                       <Button variant="ghost" size="icon" onClick={() => navigate(`/incident/${incident.id}`)}>
                         <Eye className="h-4 w-4" />
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => setDeleteTarget(incident)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </motion.div>
@@ -203,6 +231,29 @@ export default function AdminDashboard() {
           )}
         </motion.div>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this report?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget && (
+                <>This permanently deletes "{deleteTarget.title}" and its uploaded media. This cannot be undone.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteIncident}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
