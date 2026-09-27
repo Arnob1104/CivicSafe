@@ -92,9 +92,11 @@ export default function IncidentDetail() {
               </div>
             )}
 
-            {incident.ai_summary && (
+            {incident.ai_summary && incident.ai_summary.trim() !== (incident.description || "").trim() && (
               <div className="mb-6 rounded-xl bg-primary/5 border border-primary/20 p-4">
-                <h3 className="text-sm font-semibold text-primary mb-2">AI Summary</h3>
+                <h3 className="text-sm font-semibold text-primary mb-2">
+                  AI Summary <span className="font-normal text-muted-foreground">(original AI analysis, before edits)</span>
+                </h3>
                 <p className="text-foreground text-sm">{incident.ai_summary}</p>
               </div>
             )}
