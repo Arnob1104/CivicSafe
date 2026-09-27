@@ -4,16 +4,22 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shield, ArrowLeft, MapPin, Clock, AlertTriangle, Image } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Shield, ArrowLeft, MapPin, Clock, AlertTriangle, Image, Trash2, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 export default function IncidentDetail() {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [incident, setIncident] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -26,6 +32,19 @@ export default function IncidentDetail() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  const handleDelete = async () => {
+    if (!id) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/api/incidents/${id}`);
+      toast.success("Report deleted");
+      navigate(isAdmin ? "/admin" : "/dashboard");
+    } catch {
+      toast.error("Failed to delete report");
+      setDeleting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -60,9 +79,21 @@ export default function IncidentDetail() {
 
       <div className="container max-w-3xl py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 text-muted-foreground">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
-          </Button>
+          <div className="flex items-center justify-between mb-6">
+            <Button variant="ghost" onClick={() => navigate(-1)} className="text-muted-foreground">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back
+            </Button>
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-1" /> Delete Report
+              </Button>
+            )}
+          </div>
 
           <div className="glass-card rounded-2xl p-8">
             <div className="flex items-start justify-between mb-6">
@@ -132,6 +163,29 @@ export default function IncidentDetail() {
           </div>
         </motion.div>
       </div>
+
+      {isAdmin && (
+        <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this report?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This permanently deletes "{incident.title}" and its uploaded media. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
