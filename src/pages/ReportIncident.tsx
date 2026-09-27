@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate, Link } from "react-router-dom";
@@ -16,12 +17,17 @@ const categories = [
   "hazardous_material", "public_disturbance", "infrastructure", "other",
 ] as const;
 
+const severities = ["low", "medium", "high", "critical"] as const;
+
 export default function ReportIncident() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [category, setCategory] = useState<string>("other");
+  const [severity, setSeverity] = useState<string>("medium");
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [address, setAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -81,8 +87,11 @@ export default function ReportIncident() {
         { image: base64, fileCount: files.length }
       );
       setAiResult(data);
+      if (data.title) setTitle(data.title);
+      if (data.description) setDescription(data.description);
       if (data.category) setCategory(data.category);
-      toast.success("AI analysis complete!");
+      if (data.severity) setSeverity(data.severity);
+      toast.success("AI analysis complete! Review and edit the fields below before submitting.");
     } catch (err) {
       console.error(err);
       toast.error("AI analysis failed. You can still submit manually.");
@@ -108,10 +117,10 @@ export default function ReportIncident() {
       }
 
       await api.post("/api/incidents", {
-        title: aiResult?.title || "Incident Report",
-        description: aiResult?.description || null,
-        category: aiResult?.category || category,
-        severity: aiResult?.severity || "medium",
+        title: title.trim() || "Incident Report",
+        description: description.trim() || null,
+        category,
+        severity,
         latitude: location?.lat ?? null,
         longitude: location?.lng ?? null,
         address: address || null,
@@ -198,41 +207,74 @@ export default function ReportIncident() {
                 )}
               </Button>
 
-              {/* AI Result */}
+              {/* AI provenance note */}
               {aiResult && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="rounded-xl bg-primary/5 border border-primary/20 p-4"
+                  className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-center gap-2"
                 >
-                  <div className="flex items-center gap-2 mb-3">
-                    <Brain className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold text-primary">AI Analysis Result</span>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="text-muted-foreground">Title:</span> <span className="text-foreground font-medium">{aiResult.title}</span></p>
-                    <p><span className="text-muted-foreground">Category:</span> <span className="text-foreground capitalize">{aiResult.category?.replace("_", " ")}</span></p>
-                    <p><span className="text-muted-foreground">Severity:</span> <span className="text-foreground capitalize">{aiResult.severity}</span></p>
-                    <p><span className="text-muted-foreground">Description:</span> <span className="text-foreground">{aiResult.description}</span></p>
-                  </div>
+                  <Brain className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-sm text-primary">
+                    AI analysis complete — the fields below have been filled in. Review and edit as needed.
+                  </span>
                 </motion.div>
               )}
 
-              {/* Manual category override */}
+              {/* Title */}
               <div>
-                <Label className="text-muted-foreground text-sm mb-2 block">Category</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="bg-secondary/50 border-border/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c} value={c} className="capitalize">
-                        {c.replace("_", " ")}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label className="text-muted-foreground text-sm mb-2 block">Title</Label>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Click 'Analyze with AI' above, or type a title yourself"
+                  className="bg-secondary/50 border-border/50"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <Label className="text-muted-foreground text-sm mb-2 block">Description</Label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="What's happening? Describe the incident, or let AI describe it from your photo."
+                  className="bg-secondary/50 border-border/50 min-h-[120px]"
+                />
+              </div>
+
+              {/* Category + Severity */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground text-sm mb-2 block">Category</Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger className="bg-secondary/50 border-border/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={c} value={c} className="capitalize">
+                          {c.replace("_", " ")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground text-sm mb-2 block">Severity</Label>
+                  <Select value={severity} onValueChange={setSeverity}>
+                    <SelectTrigger className="bg-secondary/50 border-border/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {severities.map((s) => (
+                        <SelectItem key={s} value={s} className="capitalize">
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Location */}
