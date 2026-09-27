@@ -118,6 +118,41 @@ def get_incident(incident_id: str, user: CurrentUser = Depends(get_current_user)
     return incident
 
 
+@router.delete("/api/incidents/{incident_id}", status_code=204)
+def delete_incident(
+    incident_id: str,
+    _: CurrentUser = Depends(require_admin),
+):
+    existing = (
+        supabase_admin.table("incidents")
+        .select("id, media_urls")
+        .eq("id", incident_id)
+        .limit(1)
+        .execute()
+    )
+    if not existing.data:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    # Best-effort cleanup of uploaded media so deleted reports don't leave
+    # orphaned files in storage. A failure here should not block the delete.
+    media_urls = existing.data[0].get("media_urls") or []
+    if media_urls:
+        paths = []
+        for url in media_urls:
+            marker = "/incident-media/"
+            idx = url.find(marker)
+            if idx != -1:
+                paths.append(url[idx + len(marker):])
+        if paths:
+            try:
+                supabase_admin.storage.from_("incident-media").remove(paths)
+            except Exception:
+                pass
+
+    supabase_admin.table("incidents").delete().eq("id", incident_id).execute()
+    return None
+
+
 @router.patch("/api/incidents/{incident_id}/status", response_model=IncidentOut)
 def update_status(
     incident_id: str,
