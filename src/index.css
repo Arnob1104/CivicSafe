@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 2%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 55%;
+
+    --accent: 142 71% 45%;
+    --accent-foreground: 0 0% 2%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 142 71% 45%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 142 71% 45%;
+    --sidebar-primary-foreground: 0 0% 2%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 142 71% 45%;
+
+    /* Custom tokens */
+    --gradient-green: linear-gradient(135deg, hsl(142 71% 45%), hsl(160 84% 39%));
+    --gradient-green-soft: linear-gradient(135deg, hsl(142 71% 45% / 0.15), hsl(160 84% 39% / 0.05));
+    --gradient-dark: linear-gradient(180deg, hsl(0 0% 4%), hsl(0 0% 7%));
+    --glow-green: 0 0 40px hsl(142 71% 45% / 0.3);
+    --glow-green-sm: 0 0 20px hsl(142 71% 45% / 0.2);
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 2%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 2%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 98%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer utilities {
+  .text-gradient-green {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(142 71% 45%), hsl(160 84% 39%));
+  }
+
+  .bg-gradient-green {
+    background-image: linear-gradient(135deg, hsl(142 71% 45%), hsl(160 84% 39%));
+  }
+
+  .bg-gradient-green-soft {
+    background-image: linear-gradient(135deg, hsl(142 71% 45% / 0.12), hsl(160 84% 39% / 0.04));
+  }
+
+  .border-gradient-green {
+    border-image: linear-gradient(135deg, hsl(142 71% 45%), hsl(160 84% 39%)) 1;
+  }
+
+  .glow-green {
+    box-shadow: 0 0 40px hsl(142 71% 45% / 0.3);
+  }
+
+  .glow-green-sm {
+    box-shadow: 0 0 20px hsl(142 71% 45% / 0.15);
+  }
+
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-xl border border-border/50;
+  }
+
+  .animate-pulse-green {
+    animation: pulse-green 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(142 71% 45% / 0.4); }
+    50% { box-shadow: 0 0 20px 8px hsl(142 71% 45% / 0.1); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  /* Leaflet dark popup overrides */
+  .dark-popup .leaflet-popup-content-wrapper {
+    background: hsl(0 0% 10%);
+    color: hsl(0 0% 95%);
+    border-radius: 0.75rem;
+    border: 1px solid hsl(0 0% 18%);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  }
+  .dark-popup .leaflet-popup-tip {
+    background: hsl(0 0% 10%);
+  }
+  .dark-popup .leaflet-popup-close-button {
+    color: hsl(0 0% 55%);
+  }
+}
