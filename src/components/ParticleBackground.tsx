@@ -1,12 +1,18 @@
 import { useEffect, useRef } from "react";
 
-type Drop = {
+type Particle = {
   x: number;
   y: number;
-  length: number;
-  speed: number;
+  radius: number;
+  driftX: number;
+  driftY: number;
+  sway: number;
+  swayOffset: number;
+  swaySpeed: number;
   opacity: number;
-  thickness: number;
+  pulse: number;
+  pulseSpeed: number;
+  hue: number;
 };
 
 export default function ParticleBackground() {
@@ -20,70 +26,107 @@ export default function ParticleBackground() {
 
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
-    let drops: Drop[] = [];
+    let particles: Particle[] = [];
     let animationId = 0;
+    let frame = 0;
 
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const buildDrops = () => {
-      // Density scales with viewport area, capped for performance.
-      const count = Math.min(160, Math.floor((width * height) / 9000));
-      drops = Array.from({ length: count }, () => makeDrop());
+    const buildParticles = () => {
+      const count = Math.min(70, Math.floor((width * height) / 22000));
+      particles = Array.from({ length: count }, () => makeParticle());
     };
 
-    const makeDrop = (): Drop => ({
+    const makeParticle = (): Particle => ({
       x: Math.random() * width,
-      y: Math.random() * height - height,
-      length: 12 + Math.random() * 26,
-      speed: 3.5 + Math.random() * 6,
-      opacity: 0.08 + Math.random() * 0.28,
-      thickness: 0.6 + Math.random() * 1.1,
+      y: Math.random() * height,
+      radius: 1.5 + Math.random() * 3.5,
+      driftX: (Math.random() - 0.5) * 0.15,
+      driftY: -(0.15 + Math.random() * 0.35),
+      sway: 0.3 + Math.random() * 0.5,
+      swayOffset: Math.random() * Math.PI * 2,
+      swaySpeed: 0.003 + Math.random() * 0.005,
+      opacity: 0.15 + Math.random() * 0.35,
+      pulse: Math.random() * Math.PI * 2,
+      pulseSpeed: 0.01 + Math.random() * 0.015,
+      // Alternate between the two green hues used across the app.
+      hue: Math.random() > 0.5 ? 142 : 160,
     });
 
-    const resetDrop = (d: Drop) => {
-      d.x = Math.random() * width;
-      d.y = -d.length - Math.random() * 40;
-      d.length = 12 + Math.random() * 26;
-      d.speed = 3.5 + Math.random() * 6;
-      d.opacity = 0.08 + Math.random() * 0.28;
-      d.thickness = 0.6 + Math.random() * 1.1;
+    const resetParticle = (p: Particle) => {
+      p.x = Math.random() * width;
+      p.y = height + p.radius + Math.random() * 60;
+      p.radius = 1.5 + Math.random() * 3.5;
+      p.driftX = (Math.random() - 0.5) * 0.15;
+      p.driftY = -(0.15 + Math.random() * 0.35);
+      p.sway = 0.3 + Math.random() * 0.5;
+      p.swayOffset = Math.random() * Math.PI * 2;
+      p.swaySpeed = 0.003 + Math.random() * 0.005;
+      p.opacity = 0.15 + Math.random() * 0.35;
+      p.pulse = Math.random() * Math.PI * 2;
+      p.pulseSpeed = 0.01 + Math.random() * 0.015;
+      p.hue = Math.random() > 0.5 ? 142 : 160;
     };
 
     const draw = () => {
       ctx.clearRect(0, 0, width, height);
-      for (const d of drops) {
-        // Green-tinted streaks matching the app's primary hue.
-        ctx.strokeStyle = `rgba(74, 222, 128, ${d.opacity})`;
-        ctx.lineWidth = d.thickness;
-        ctx.beginPath();
-        ctx.moveTo(d.x, d.y);
-        ctx.lineTo(d.x, d.y + d.length);
-        ctx.stroke();
+      frame++;
 
-        d.y += d.speed;
-        if (d.y > height + d.length) resetDrop(d);
+      for (const p of particles) {
+        p.x += p.driftX + Math.sin(frame * p.swaySpeed + p.swayOffset) * p.sway;
+        p.y += p.driftY;
+        p.pulse += p.pulseSpeed;
+
+        if (p.y < -p.radius * 4) resetParticle(p);
+        if (p.x < -20) p.x = width + 20;
+        if (p.x > width + 20) p.x = -20;
+
+        const pulseFactor = 0.7 + 0.3 * Math.sin(p.pulse);
+        const r = p.radius * pulseFactor;
+        const alpha = p.opacity * pulseFactor;
+
+        // Soft glow halo
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 4);
+        gradient.addColorStop(0, `hsla(${p.hue}, 71%, 55%, ${alpha})`);
+        gradient.addColorStop(0.4, `hsla(${p.hue}, 71%, 50%, ${alpha * 0.3})`);
+        gradient.addColorStop(1, `hsla(${p.hue}, 71%, 45%, 0)`);
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r * 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bright core
+        ctx.fillStyle = `hsla(${p.hue}, 80%, 70%, ${alpha * 1.4})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
       }
+
       animationId = requestAnimationFrame(draw);
     };
 
     const handleResize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-      buildDrops();
+      buildParticles();
     };
 
-    buildDrops();
+    buildParticles();
 
     if (prefersReduced) {
-      // Render a single static frame instead of animating.
       ctx.clearRect(0, 0, width, height);
-      for (const d of drops) {
-        ctx.strokeStyle = `rgba(74, 222, 128, ${d.opacity})`;
-        ctx.lineWidth = d.thickness;
+      for (const p of particles) {
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 4);
+        gradient.addColorStop(0, `hsla(${p.hue}, 71%, 55%, ${p.opacity})`);
+        gradient.addColorStop(1, `hsla(${p.hue}, 71%, 45%, 0)`);
+        ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.moveTo(d.x, d.y);
-        ctx.lineTo(d.x, d.y + d.length);
-        ctx.stroke();
+        ctx.arc(p.x, p.y, p.radius * 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `hsla(${p.hue}, 80%, 70%, ${p.opacity * 1.4})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
       }
     } else {
       draw();
