@@ -20,7 +20,7 @@ civicsafe/
 ```
 
 ## features
-• AI incident detection: users upload photos or video and the AI identifies the incident type and auto-generates a report
+- **AI incident detection**: users upload photos or video and the AI identifies the incident type and auto-generates a report
 description.
-• One-click reporting: the report is submitted with the user’s location straight to the admin dashboard.
-• Admin workflow: admins review each report and set its status to Pending, Running, Resolved or Closed.
+- **One-click reporting**: the report is submitted with the user’s location straight to the admin dashboard.
+- **Admin workflow**: admins review each report and set its status to Pending, Running, Resolved or Closed.
