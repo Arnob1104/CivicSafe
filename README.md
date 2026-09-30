@@ -1,3 +1,5 @@
+<img width="1321" height="609" alt="image" src="https://github.com/user-attachments/assets/eb0c064c-995c-46ac-ac23-1e35da7fdbc2" />
+
 # CivicSafe
 
 An AI-powered public safety incident reporting platform.
