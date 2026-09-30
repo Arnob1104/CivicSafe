@@ -19,21 +19,8 @@ civicsafe/
 └── .env.example        # Frontend environment variables
 ```
 
-## Local development
-
-### 1. Supabase setup
-Run the SQL files in `supabase/migrations/` against your Supabase project (SQL Editor, in order), and confirm the `incident-media` storage bucket was created.
-
-### 2. Backend (FastAPI)
-See `backend/README.md`.
-
-### 3. Frontend
-```sh
-npm install
-cp .env.example .env   # fill in your values
-npm run dev
-```
-
-## Deployment
-
-See `DEPLOYMENT.md` for a full guide to deploying the backend on Render and the frontend on Vercel, both on free tiers.
+## features
+• AI incident detection: users upload photos or video and the AI identifies the incident type and auto-generates a report
+description.
+• One-click reporting: the report is submitted with the user’s location straight to the admin dashboard.
+• Admin workflow: admins review each report and set its status to Pending, Running, Resolved or Closed.
